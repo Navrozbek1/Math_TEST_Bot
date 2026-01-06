@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 # 🔑 Bot token
-TOKEN = "8340649263:AAEYW9SAjiZ8gAxRBfV1u_SInnkotLuDWMM"
+TOKEN = "8492051752:AAF6zW7N_Djda1SJQTUdWWGhjw7L0N8R3_E"
 # 👑 Admin ID
 ADMIN_ID = 6189981072
 
