@@ -4,319 +4,184 @@ from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-# 🔑 Bot token (o'zingiznikiga almashtiring)
 TOKEN = "8492051752:AAF6zW7N_Djda1SJQTUdWWGhjw7L0N8R3_E"
-
-# 👑 Admin ID (o'zingizning ID'ingiz)
 ADMIN_ID = 6189981072
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-# Foydalanuvchi ma'lumotlari (RAMda saqlanadi)
 user_data = {}
 
-# Matnli masalalar shablonlari (yosh bolalar uchun qiziqarliroq qilindi)
 text_templates = {
-    "+": [
-        "{a} ta olma bor edi, yana {b} ta oldi. Jami nechta olma bo‘ldi?",
-        "Do‘stim menga {a} ta konfet berdi, keyin {b} ta qo‘shdim. Hammasi nechta?",
-        "Sinfda {a} ta o‘quvchi bor edi, bugun {b} ta yangi bola keldi. Jami nechta?"
-    ],
-    "-": [
-        "{a} ta shokolad bor edi, {b} tasini yedim. Qancha shokolad qoldi?",
-        "Ota-onam {a} ming so‘m berdi, {b} ming so‘m xarajat qildim. Qancha qoldi?",
-        "{a} ta qalam bor edi, {b} tasini sinfdoshlarimga berdim. Nechta qoldi?"
-    ],
-    "*": [
-        "{a} ta stol bor, har bir stol ustida {b} ta kitob. Jami nechta kitob?",
-        "Har bir kunda {a} ta soat o‘qiyman, {b} kun davomida nechta soat bo‘ladi?",
-        "{a} ta guruhda, har bir guruhda {b} ta bola. Hammasi nechta bola?"
-    ],
-    "/": [
-        "{a} ta konfetni {b} ta do‘stga teng taqsimladik. Har biriga nechta?",
-        "{a} ta olma {b} ta bolaga bo‘linganda, har bir bola nechta oladi?",
-        "{a} metr mato {b} ta bir xil ko‘ylakka yetadi. Har bir ko‘ylakka nechta metr?"
-    ]
+    "+": ["{a} + {b} = ?"],
+    "-": ["{a} - {b} = ?"],
+    "*": ["{a} × {b} = ?"],
+    "/": ["{a} ÷ {b} = ?"]
 }
 
-def generate_questions():
-    questions = []
-    operations = ["+", "-", "*", "/"]
+# ================== SAVOL GENERATOR ==================
 
-    # 12 ta OSON (1-120 oralig‘ida, oddiy sonlar)
-    for _ in range(12):
-        op = random.choice(operations)
+def make_question(level):
+    op = random.choice(["+", "-", "*", "/"])
+
+    if level == "Oson":        # 5x qiyin
         if op == "+":
-            a = random.randint(5, 80)
-            b = random.randint(3, 100 - a)
+            a, b = random.randint(200, 500), random.randint(200, 500)
             ans = a + b
         elif op == "-":
-            a = random.randint(10, 100)
-            b = random.randint(2, a - 2)
+            a, b = random.randint(300, 600), random.randint(100, 300)
             ans = a - b
         elif op == "*":
-            a = random.randint(2, 10)
-            b = random.randint(2, 8)
+            a, b = random.randint(12, 25), random.randint(10, 20)
             ans = a * b
-        else:  # "/"
-            b = random.randint(2, 6)
-            ans = random.randint(3, 12)
+        else:
+            b = random.randint(6, 15)
+            ans = random.randint(10, 30)
             a = ans * b
 
-        wrongs = set()
-        while len(wrongs) < 3:
-            offset = random.randint(-6, 6)
-            if offset != 0 and ans + offset > 0:
-                wrongs.add(ans + offset)
-        wrongs = list(wrongs)
-        options = [ans] + wrongs
-        random.shuffle(options)
-
-        if random.random() > 0.35:
-            q_text = random.choice(text_templates[op]).format(a=a, b=b)
-        else:
-            q_text = f"{a} {op} {b} = ?"
-
-        questions.append({
-            "q": q_text,
-            "options": [str(o) for o in options],
-            "answer": options.index(ans),
-            "level": "Oson"
-        })
-
-    # 18 ta O‘RTACHA (30-400 oralig‘ida)
-    for _ in range(18):
-        op = random.choice(operations)
+    elif level == "O‘rtacha":  # 10x qiyin
         if op == "+":
-            a = random.randint(30, 300)
-            b = random.randint(10, 350 - a)
+            a, b = random.randint(800, 2000), random.randint(500, 1500)
             ans = a + b
         elif op == "-":
-            a = random.randint(50, 350)
-            b = random.randint(10, a - 5)
+            a, b = random.randint(1000, 2500), random.randint(300, 900)
             ans = a - b
         elif op == "*":
-            a = random.randint(6, 20)
-            b = random.randint(4, 12)
+            a, b = random.randint(20, 50), random.randint(15, 35)
             ans = a * b
-        else:  # "/"
-            b = random.randint(4, 10)
-            ans = random.randint(6, 25)
-            a = ans * b
-
-        wrongs = set()
-        while len(wrongs) < 3:
-            offset = random.randint(-15, 15)
-            if offset != 0 and ans + offset > 0:
-                wrongs.add(ans + offset)
-        wrongs = list(wrongs)
-        options = [ans] + wrongs
-        random.shuffle(options)
-
-        if random.random() > 0.3:
-            q_text = random.choice(text_templates[op]).format(a=a, b=b)
         else:
-            q_text = f"{a} {op} {b} = ?"
-
-        questions.append({
-            "q": q_text,
-            "options": [str(o) for o in options],
-            "answer": options.index(ans),
-            "level": "O‘rtacha"
-        })
-
-    # 15 ta QIYIN (150-1200 oralig‘ida)
-    for _ in range(15):
-        op = random.choice(operations)
-        if op == "+":
-            a = random.randint(150, 900)
-            b = random.randint(50, 1000 - a)
-            ans = a + b
-        elif op == "-":
-            a = random.randint(200, 1000)
-            b = random.randint(50, a - 20)
-            ans = a - b
-        elif op == "*":
-            a = random.randint(12, 35)
             b = random.randint(8, 20)
-            ans = a * b
-        else:  # "/"
-            b = random.randint(8, 15)
-            ans = random.randint(12, 50)
+            ans = random.randint(20, 60)
             a = ans * b
 
-        wrongs = set()
-        while len(wrongs) < 3:
-            offset = random.randint(-40, 40)
-            if offset != 0 and ans + offset > 0:
-                wrongs.add(ans + offset)
-        wrongs = list(wrongs)
-        options = [ans] + wrongs
-        random.shuffle(options)
-
-        if random.random() > 0.25:
-            q_text = random.choice(text_templates[op]).format(a=a, b=b)
+    else:                     # QIYIN – 20x
+        if op == "+":
+            a, b = random.randint(3000, 9000), random.randint(2000, 7000)
+            ans = a + b
+        elif op == "-":
+            a, b = random.randint(5000, 12000), random.randint(2000, 5000)
+            ans = a - b
+        elif op == "*":
+            a, b = random.randint(40, 90), random.randint(25, 60)
+            ans = a * b
         else:
-            q_text = f"{a} {op} {b} = ?"
+            b = random.randint(15, 30)
+            ans = random.randint(30, 100)
+            a = ans * b
 
-        questions.append({
-            "q": q_text,
-            "options": [str(o) for o in options],
-            "answer": options.index(ans),
-            "level": "Qiyin"
-        })
+    wrongs = set()
+    while len(wrongs) < 3:
+        x = ans + random.randint(-ans//4, ans//4)
+        if x != ans and x > 0:
+            wrongs.add(x)
 
-    random.shuffle(questions)
-    return questions  # 45 ta savol bo‘ladi
+    options = [ans] + list(wrongs)
+    random.shuffle(options)
 
-def get_keyboard(q_index: int, questions):
-    opts = questions[q_index]["options"]
+    return {
+        "q": random.choice(text_templates[op]).format(a=a, b=b),
+        "options": [str(i) for i in options],
+        "answer": options.index(ans),
+        "level": level
+    }
+
+def generate_questions():
+    q = []
+    q += [make_question("Oson") for _ in range(15)]
+    q += [make_question("O‘rtacha") for _ in range(15)]
+    q += [make_question("Qiyin") for _ in range(10)]
+    random.shuffle(q)
+    return q
+
+# ================== KEYBOARD ==================
+
+def keyboard(qi, qs):
+    o = qs[qi]["options"]
     return InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text=opts[0], callback_data=f"{q_index}:0"),
-            InlineKeyboardButton(text=opts[1], callback_data=f"{q_index}:1")
-        ],
-        [
-            InlineKeyboardButton(text=opts[2], callback_data=f"{q_index}:2"),
-            InlineKeyboardButton(text=opts[3], callback_data=f"{q_index}:3")
-        ]
+        [InlineKeyboardButton(text=o[0], callback_data=f"{qi}:0"),
+         InlineKeyboardButton(text=o[1], callback_data=f"{qi}:1")],
+        [InlineKeyboardButton(text=o[2], callback_data=f"{qi}:2"),
+         InlineKeyboardButton(text=o[3], callback_data=f"{qi}:3")]
     ])
 
-async def question_timer(user_id, q_index, questions, message: types.Message):
-    await asyncio.sleep(60)  # 60 sekund = 1 daqiqa
-    if user_id in user_data and user_data[user_id].get("current") == q_index:
-        data = user_data[user_id]
-        data["current"] += 1
-        next_q = data["current"]
-        await message.answer("⏰ Vaqt tugadi! Bu savol xato hisoblanadi.")
-        if next_q < len(questions):
-            q = questions[next_q]
-            new_msg = await message.answer(
-                f"Savol {next_q + 1}/45 ({q['level']}):\n{q['q']}",
-                reply_markup=get_keyboard(next_q, questions)
+# ================== TIMER (REAL COUNTDOWN) ==================
+
+async def timer(uid, qi, msg):
+    for sec in range(60, 0, -1):
+        await asyncio.sleep(1)
+        if uid not in user_data or user_data[uid]["current"] != qi:
+            return
+        try:
+            await msg.edit_text(
+                user_data[uid]["text"] + f"\n\n⏳ Qolgan vaqt: {sec} s",
+                reply_markup=msg.reply_markup
             )
-            asyncio.create_task(question_timer(user_id, next_q, questions, new_msg))
-        else:
-            await finish_test(user_id, message)
+        except:
+            pass
 
-async def finish_test(user_id, message: types.Message):
-    if user_id not in user_data:
+    if uid in user_data and user_data[uid]["current"] == qi:
+        user_data[uid]["current"] += 1
+        await msg.answer("⏰ Vaqt tugadi!")
+        await next_question(uid, msg)
+
+# ================== NEXT ==================
+
+async def next_question(uid, msg):
+    data = user_data[uid]
+    qi = data["current"]
+
+    if qi >= len(data["questions"]):
+        await finish(uid, msg)
         return
-    data = user_data[user_id]
-    score = data["score"]
-    total = len(data["questions"])  # 45
-    percent = round((score / total) * 100, 1)
 
-    status = "✅ Ajoyib! Testdan o‘tdingiz!" if percent >= 80 else "❌ Yana biroz mashq qilish kerak. Yana urinib ko‘ring!"
+    q = data["questions"][qi]
+    text = f"Savol {qi+1}/40 ({q['level']}):\n{q['q']}"
+    data["text"] = text
+    m = await msg.answer(text, reply_markup=keyboard(qi, data["questions"]))
+    asyncio.create_task(timer(uid, qi, m))
 
-    await message.answer(
-        f"🎉 Test yakunlandi!\n"
-        f"To‘g‘ri javoblar: {score}/{total}\n"
-        f"Foiz: {percent}%\n\n"
-        f"{status}"
-    )
+# ================== FINISH ==================
 
-    # Admin xabari
-    fullname = message.from_user.full_name
-    username = f"@{message.from_user.username}" if message.from_user.username else "yo‘q"
-    await bot.send_message(
-        ADMIN_ID,
-        f"📊 {fullname} (ID: {user_id}, {username}) testni tugatdi\n"
-        f"To‘g‘ri: {score}/{total}  |  {percent}%  |  {status}"
-    )
+async def finish(uid, msg):
+    d = user_data[uid]
+    s = d["score"]
+    p = round(s / 40 * 100, 1)
+    await msg.answer(f"🏁 Test tugadi!\n✅ {s}/40\n📊 {p}%")
+    user_data.pop(uid)
 
-    user_data.pop(user_id, None)
-
-# ==================== HANDLERLAR ====================
-
-@dp.message(Command("start"))
-async def cmd_start(message: types.Message):
-    await message.answer(
-        "👋 Salom! Men 4-sinf o‘quvchilari uchun Matematika Test Botiman.\n\n"
-        "Testni boshlash: /test\n"
-        "Yordam: /help"
-    )
-
-@dp.message(Command("help"))
-async def cmd_help(message: types.Message):
-    await message.answer(
-        "ℹ️ Qo‘llanma:\n\n"
-        "/start — salomlashish\n"
-        "/help — bu xabar\n"
-        "/test — 45 ta savoldan iborat test boshlash\n\n"
-        "⏱ Har bir savolga 1 daqiqa vaqt beriladi.\n"
-        "80% va undan yuqori — testdan o‘tdingiz!"
-    )
+# ================== HANDLERLAR ==================
 
 @dp.message(Command("test"))
-async def cmd_test(message: types.Message):
-    user_id = message.from_user.id
-    if user_id in user_data:
-        await message.answer("Sizda allaqachon faol test bor. Avval uni tugating yoki /start bilan boshlang.")
-        return
+async def start_test(msg: types.Message):
+    uid = msg.from_user.id
+    if uid in user_data:
+        return await msg.answer("Test allaqachon boshlangan!")
 
-    questions = generate_questions()  # 45 ta savol
-    user_data[user_id] = {"score": 0, "current": 0, "questions": questions}
-
-    q = questions[0]
-    msg = await message.answer(
-        f"Savol 1/45 ({q['level']}):\n{q['q']}",
-        reply_markup=get_keyboard(0, questions)
-    )
-
-    # Admin ogohlantirish
-    fullname = message.from_user.full_name
-    username = f"@{message.from_user.username}" if message.from_user.username else "yo‘q"
-    await bot.send_message(ADMIN_ID, f"📝 {fullname} (ID: {user_id}, {username}) test boshladi.")
-
-    asyncio.create_task(question_timer(user_id, 0, questions, msg))
+    qs = generate_questions()
+    user_data[uid] = {"questions": qs, "current": 0, "score": 0}
+    await next_question(uid, msg)
 
 @dp.callback_query(F.data)
-async def process_answer(callback: types.CallbackQuery):
-    user_id = callback.from_user.id
-    if user_id not in user_data:
-        await callback.answer("Avval /test buyrug‘ini bering.", show_alert=True)
+async def answer(cb: types.CallbackQuery):
+    uid = cb.from_user.id
+    if uid not in user_data:
         return
 
-    data = user_data[user_id]
-    try:
-        q_index, opt_index = map(int, callback.data.split(":"))
-    except:
-        await callback.answer("Xato!", show_alert=True)
+    qi, oi = map(int, cb.data.split(":"))
+    d = user_data[uid]
+
+    if qi != d["current"]:
         return
 
-    if q_index != data["current"]:
-        await callback.answer("Bu savol allaqachon o‘tib ketgan.", show_alert=True)
-        return
+    if oi == d["questions"][qi]["answer"]:
+        d["score"] += 1
 
-    questions = data["questions"]
-    correct_idx = questions[q_index]["answer"]
-
-    if opt_index == correct_idx:
-        data["score"] += 1
-        await callback.answer("✅ To‘g‘ri!")
-    else:
-        correct = questions[q_index]["options"][correct_idx]
-        await callback.answer(f"❌ Xato! To‘g‘ri: {correct}")
-
-    data["current"] += 1
-    next_q = data["current"]
-
-    await callback.message.delete()
-
-    if next_q < len(questions):
-        q = questions[next_q]
-        new_msg = await callback.message.answer(
-            f"Savol {next_q + 1}/45 ({q['level']}):\n{q['q']}",
-            reply_markup=get_keyboard(next_q, questions)
-        )
-        asyncio.create_task(question_timer(user_id, next_q, questions, new_msg))
-    else:
-        await finish_test(user_id, callback.message)
+    d["current"] += 1
+    await cb.message.delete()
+    await next_question(uid, cb.message)
 
 async def main():
-    print("Bot ishga tushdi... 🚀")
+    print("BOT ISHLAYAPTI 🚀")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
